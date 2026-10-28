@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>REGISTRO DE INVENTARIOS</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f4f8;
+      color: #253247;
+    }
+
+    .contenedor {
+      width: 100%;
+      max-width: 480px;
+      margin: 25px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+      display: block;
+      max-width: 180px;
+      max-height: 100px;
+      object-fit: contain;
+      margin: 0 auto 15px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 25px;
+    }
+
+    .descripcion {
+      margin-bottom: 25px;
+      text-align: center;
+      color: #667085;
+      font-size: 14px;
+    }
+
+    .campo {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 45px;
+      padding: 11px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      background: white;
+      font-size: 16px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    }
+
+    input[readonly] {
+      background: #f3f5f7;
+      color: #475467;
+    }
+
+    button {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px;
+      border: none;
+      border-radius: 7px;
+      background: #1769aa;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #12558a;
+    }
+
+    button:disabled {
+      background: #8798a8;
+      cursor: wait;
+    }
+
+    #mensaje {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .exito {
+      color: #167344;
+    }
+
+    .error {
+      color: #b42318;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="contenedor">
+
+    <img
+      class="logo"
+      src="logo.png"
+      alt="Logo de la empresa"
+      onerror="this.style.display='none'"
+    >
+
+    <h1>REGISTRO DE INVENTARIOS</h1>
+
+    <p class="descripcion">
+      Complete la información para registrar la producción.
+    </p>
+
+    <form id="formulario">
+
+      <div class="campo">
+        <label for="fechaHora">Fecha y hora</label>
+        <input type="text" id="fechaHora" readonly>
+      </div>
+
+      <div class="campo">
+        <label for="planta">Planta</label>
+        <select id="planta" required>
+          <option value="">Seleccione una planta</option>
+          <option value="Planta 1">Planta 1</option>
+          <option value="Planta 2">Planta 2</option>
+          <option value="Bodega azul">Bodega azul</option>
+          <option value="Bodega blanca">Bodega blanca</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input
+          type="text"
+          id="nombre"
+          placeholder="Ingrese su nombre"
+          autocomplete="name"
+          required
+        >
+      </div>
+
+      <div class="campo">
+        <label for="lote">Número de lote</label>
+        <input
+          type="text"
+          id="lote"
+          placeholder="Ingrese el número de lote"
+          autocomplete="off"
+          required
+        >
+      </div>
+
+      <div class="campo">
+        <label for="cantidad">Cantidad de pacas</label>
+        <input
+          type="number"
+          id="cantidad"
+          placeholder="Ingrese la cantidad"
+          min="1"
+          step="1"
+          required
+        >
+      </div>
+
+      <button type="submit" id="botonEnviar">
+        Guardar registro
+      </button>
+
+      <div id="mensaje" role="status" aria-live="polite"></div>
+
+    </form>
+  </main>
+
+  <script>
+    // URL actualizada de Google Apps Script.
+    const URL_SCRIPT =
+      "https://script.google.com/macros/s/AKfycbyC-k5f1n0NPE_nUmT2mkVoL9_kICY2Wno-o88rrCxADkvxtbC2VU09q-Q3BpEUjDAA/exec";
+
+    const formulario = document.getElementById("formulario");
+    const campoFecha = document.getElementById("fechaHora");
+    const campoPlanta = document.getElementById("planta");
+    const campoNombre = document.getElementById("nombre");
+    const campoLote = document.getElementById("lote");
+    const campoCantidad = document.getElementById("cantidad");
+    const botonEnviar = document.getElementById("botonEnviar");
+    const mensaje = document.getElementById("mensaje");
+
+    // Obtener fecha y hora de Colombia.
+    function obtenerFechaColombia() {
+      const ahora = new Date();
+
+      const partes = new Intl.DateTimeFormat("es-CO", {
+        timeZone: "America/Bogota",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(ahora);
+
+      const valor = tipo =>
+        partes.find(parte => parte.type === tipo).value;
+
+      return (
+        `${valor("day")}/${valor("month")}/${valor("year")} ` +
+        `${valor("hour")}:${valor("minute")}:${valor("second")}`
+      );
+    }
+
+    function actualizarFechaHora() {
+      campoFecha.value = obtenerFechaColombia();
+    }
+
+    actualizarFechaHora();
+
+    function mostrarMensaje(texto, tipo) {
+      mensaje.textContent = texto;
+      mensaje.className = tipo;
+    }
+
+    formulario.addEventListener("submit", async function(evento) {
+      evento.preventDefault();
+
+      if (!formulario.checkValidity()) {
+        formulario.reportValidity();
+        return;
+      }
+
+      const cantidad = Number(campoCantidad.value);
+
+      if (!Number.isInteger(cantidad) || cantidad <= 0) {
+        mostrarMensaje(
+          "Ingrese una cantidad entera de pacas mayor que cero.",
+          "error"
+        );
+        return;
+      }
+
+      // Guardar exactamente la fecha visible en el formulario.
+      const datos = {
+        fechaHora: obtenerFechaColombia(),
+        planta: campoPlanta.value,
+        nombre: campoNombre.value.trim(),
+        lote: campoLote.value.trim(),
+        cantidad: cantidad
+      };
+
+      // Evitar el envío de campos de texto vacíos.
+      if (!datos.nombre || !datos.lote) {
+        mostrarMensaje(
+          "Complete el nombre y el número de lote.",
+          "error"
+        );
+        return;
+      }
+
+      botonEnviar.disabled = true;
+      botonEnviar.textContent = "Enviando...";
+      mostrarMensaje("", "");
+
+      try {
+        await fetch(URL_SCRIPT, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(datos)
+        });
+
+        mostrarMensaje(
+          "Solicitud enviada. Verifique Google Sheets para confirmar el registro.",
+          "exito"
+        );
+
+        formulario.reset();
+        actualizarFechaHora();
+
+      } catch (error) {
+        mostrarMensaje(
+          "No se pudo enviar la solicitud. Revise su conexión e intente nuevamente.",
+          "error"
+        );
+      } finally {
+        botonEnviar.disabled = false;
+        botonEnviar.textContent = "Guardar registro";
+      }
+    });
+  </script>
+</body>
+</html>
